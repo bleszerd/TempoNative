@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".activity.ForecastActivity">
+
+    <!-- Header forecast -->
+    <LinearLayout
+        android:id="@+id/header_forecast"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginHorizontal="8dp"
+        android:layout_marginTop="8dp"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="32dp"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <!-- Date -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="01/06/2021" />
+
+        <!-- Location -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="Altinópolis" />
+
+        <!-- Forecast Image -->
+        <ImageView
+            android:layout_width="140dp"
+            android:layout_height="140dp"
+            android:layout_marginVertical="16dp"
+            android:scaleType="fitXY"
+            android:src="@drawable/ic_sun" />
+
+        <!-- Temperature -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="62sp"
+            android:textStyle="bold"
+            tools:text="24" />
+    </LinearLayout>
+
+    <!-- Horizontal forecast details -->
+    <androidx.appcompat.widget.LinearLayoutCompat
+        android:id="@+id/horizontal_forecast_details"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="8dp"
+        android:layout_marginVertical="8dp"
+        android:background="@drawable/horizontal_forecast_detail_bg"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:padding="16dp"
+        app:divider="@drawable/horizontal_forecast_detail_divider"
+        app:layout_constraintBottom_toTopOf="@id/forecast_week_recyclerview"
+        app:layout_constraintTop_toBottomOf="@id/header_forecast"
+        app:showDividers="middle">
+
+        <!-- Wind speed -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            tools:text="1.74 km/h" />
+
+        <!-- Sunrise -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            tools:text="06:39 am" />
+
+        <!-- Sunset -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            tools:text="06:39 pm" />
+
+        <!-- Rain drop -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            tools:text="35" />
+
+    </androidx.appcompat.widget.LinearLayoutCompat>
+
+    <!-- Vertical forecast weeks -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/forecast_week_recyclerview"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/horizontal_forecast_details"
+        tools:listitem="@layout/forecast_week_item"
+        android:clipToPadding="false"
+        android:paddingEnd="8dp"
+        />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
