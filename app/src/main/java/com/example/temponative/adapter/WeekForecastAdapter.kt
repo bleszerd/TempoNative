@@ -1,5 +1,6 @@
 package com.example.temponative.adapter
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -7,12 +8,15 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.temponative.R
+import com.example.temponative.datasource.WeekForecastDataSource
 import com.example.temponative.models.WeekForecast
+import com.example.temponative.utils.Utils
 
 class WeekForecastAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
-    private var weekForecastItems = listOf<WeekForecast>()
+    var weekForecastItems = mutableListOf<WeekForecast>()
 
     class WeekForecastViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val utils = Utils()
         private val dateTextView: TextView = itemView.findViewById(R.id.week_forecast_item_date)
         private val tempMinTextView: TextView =
             itemView.findViewById(R.id.week_forecast_item_min_temp)
@@ -25,7 +29,13 @@ class WeekForecastAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
             dateTextView.setText(weekForecast.date)
             tempMinTextView.setText(weekForecast.minTemp)
             tempMaxTextView.setText(weekForecast.maxTemp)
-            conditionImageView.setBackgroundResource(R.drawable.ic_sun)
+            conditionImageView.setImageResource(utils.handleForecastIcon(weekForecast.condition))
+            conditionImageView.setColorFilter(
+                utils.handleForecastIconColor(
+                    itemView.context,
+                    weekForecast.condition
+                )
+            )
         }
     }
 
@@ -47,7 +57,21 @@ class WeekForecastAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         return weekForecastItems.size
     }
 
-    fun updateList(forecasts: List<WeekForecast>) {
+    fun updateList(forecasts: MutableList<WeekForecast>) {
         weekForecastItems = forecasts
+    }
+
+    fun add(forecast: WeekForecast) {
+        Log.d("adding", "Adding: ${forecast.date} for ${forecast.minTemp}")
+        weekForecastItems.add(forecast)
+    }
+
+    fun clearAll(){
+        this.weekForecastItems.clear()
+    }
+
+    fun update(forecastsList: MutableList<WeekForecast>) {
+        this.weekForecastItems.clear()
+        forecastsList.addAll(forecastsList)
     }
 }
