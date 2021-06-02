@@ -1,34 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
     android:layout_height="match_parent"
+    android:layout_marginStart="8dp"
+    android:layout_marginBottom="8dp"
+    android:background="@drawable/horizontal_forecast_detail_bg"
     android:gravity="center"
     android:orientation="vertical"
     android:paddingHorizontal="16dp"
-    android:paddingVertical="16dp"
-    android:layout_marginStart="8dp"
-    android:background="@drawable/horizontal_forecast_detail_bg">
+    android:paddingVertical="16dp">
 
     <!-- Date -->
     <TextView
+        android:layout_marginTop="0dp"
         android:id="@+id/week_forecast_item_date"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:gravity="center"
-        android:textColor="@color/black"
+        android:textColor="@color/dark_blue_text"
+        android:layout_marginBottom="56dp"
         tools:text="01/06" />
 
     <!-- Forecast condition image -->
     <ImageView
-        android:importantForAccessibility="no"
         android:id="@+id/week_forecast_item_condition"
         android:layout_width="30dp"
         android:layout_height="30dp"
+        android:layout_marginBottom="32dp"
         android:gravity="center"
-        android:scaleType="fitXY"
-        android:src="@drawable/ic_sun"
-        android:layout_marginVertical="16dp"/>
+        android:importantForAccessibility="no"
+        android:adjustViewBounds="true"
+        tools:src="@drawable/ic_sun"
+        app:tint="@color/sun" />
 
     <!-- Forecast min temp -->
     <TextView
@@ -36,7 +40,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:textColor="@color/black"
+        android:textColor="@color/dark_blue_text"
         android:textSize="18sp"
         tools:text="19º" />
 
@@ -46,7 +50,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:textColor="@color/black"
+        android:textColor="@color/dark_blue_text"
         android:textSize="22sp"
         android:textStyle="bold"
         tools:text="26º" />

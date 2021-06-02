@@ -4,7 +4,18 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/concrete"
     tools:context=".activity.ForecastActivity">
+
+    <Button
+        android:id="@+id/rp_button"
+        android:layout_width="60dp"
+        android:layout_height="40dp"
+        android:text="RP"
+        android:backgroundTintMode="screen"
+        android:backgroundTint="@color/sun"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <!-- Header forecast -->
     <LinearLayout
@@ -13,38 +24,50 @@
         android:layout_height="0dp"
         android:layout_marginHorizontal="8dp"
         android:layout_marginTop="8dp"
+        android:background="@drawable/night_forecast_gradient"
         android:gravity="center"
         android:orientation="vertical"
-        android:padding="32dp"
+        android:padding="48dp"
         app:layout_constraintTop_toTopOf="parent">
 
         <!-- Date -->
         <TextView
+            android:id="@+id/activity_forecast_date_textview"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            tools:text="01/06/2021" />
+            android:text="01/06/2021"
+            android:textColor="@color/white"
+            android:textSize="16sp" />
 
         <!-- Location -->
         <TextView
+            android:id="@+id/activity_forecast_city_textview"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            tools:text="Altinópolis" />
+            android:text="Altinópolis"
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            android:textStyle="bold" />
 
         <!-- Forecast Image -->
         <ImageView
+            android:id="@+id/activity_forecast_condition_imageview"
             android:layout_width="140dp"
             android:layout_height="140dp"
             android:layout_marginVertical="16dp"
             android:scaleType="fitXY"
-            android:src="@drawable/ic_sun" />
+            app:tint="@color/night_moon"
+            tools:src="@drawable/ic_moon_night" />
 
         <!-- Temperature -->
         <TextView
+            android:id="@+id/activity_forecast_temp_textview"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="62sp"
-            android:textStyle="bold"
-            tools:text="24" />
+            android:text="24"
+            android:textColor="@color/white"
+            android:textSize="72sp"
+            android:textStyle="bold" />
     </LinearLayout>
 
     <!-- Horizontal forecast details -->
@@ -57,39 +80,103 @@
         android:background="@drawable/horizontal_forecast_detail_bg"
         android:gravity="center"
         android:orientation="horizontal"
-        android:padding="16dp"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="8dp"
         app:divider="@drawable/horizontal_forecast_detail_divider"
         app:layout_constraintBottom_toTopOf="@id/forecast_week_recyclerview"
         app:layout_constraintTop_toBottomOf="@id/header_forecast"
         app:showDividers="middle">
 
         <!-- Wind speed -->
-        <TextView
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/white"
-            tools:text="1.74 km/h" />
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:src="@drawable/ic_weather_windy"
+                app:tint="@color/lightBlue" />
+
+            <TextView
+                android:id="@+id/activity_forecast_horizontal_wind_speed_textview"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="1.74 km/h"
+                android:textColor="@color/dark_blue_text" />
+
+        </LinearLayout>
 
         <!-- Sunrise -->
-        <TextView
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/white"
-            tools:text="06:39 am" />
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:src="@drawable/ic_weather_sunset_up"
+                app:tint="@color/lightBlue" />
+
+            <TextView
+                android:id="@+id/activity_forecast_horizontal_sunrise_textview"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="06:39 am"
+                android:textColor="@color/dark_blue_text" />
+
+        </LinearLayout>
 
         <!-- Sunset -->
-        <TextView
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/white"
-            tools:text="06:39 pm" />
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:src="@drawable/ic_weather_sunset_down"
+                app:tint="@color/lightBlue" />
+
+            <TextView
+                android:id="@+id/activity_forecast_horizontal_sunset_textview"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="06:39 pm"
+                android:textColor="@color/dark_blue_text" />
+        </LinearLayout>
 
         <!-- Rain drop -->
-        <TextView
+        <LinearLayout
+            android:id="@+id/activity_forecast_horizontal_humidity_linearlayout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/white"
-            tools:text="35" />
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:src="@drawable/ic_water_drop"
+                app:tint="@color/lightBlue" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="35"
+                android:textColor="@color/dark_blue_text" />
+        </LinearLayout>
 
     </androidx.appcompat.widget.LinearLayoutCompat>
 
@@ -98,15 +185,14 @@
         android:id="@+id/forecast_week_recyclerview"
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:clipToPadding="false"
         android:orientation="horizontal"
+        android:paddingEnd="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@id/horizontal_forecast_details"
-        tools:listitem="@layout/forecast_week_item"
-        android:clipToPadding="false"
-        android:paddingEnd="8dp"
-        />
+        tools:listitem="@layout/forecast_week_item" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
