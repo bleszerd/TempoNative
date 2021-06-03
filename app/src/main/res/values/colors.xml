@@ -18,4 +18,5 @@
     <color name="night_moon">#163bb5</color>
     <color name="storm">#1ec9ff</color>
     <color name="fog">#cccccc</color>
+    <color name="plate">#65000000</color>
 </resources>
