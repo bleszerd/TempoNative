@@ -70,9 +70,9 @@ class ForecastActivity : AppCompatActivity() {
 
         navigationView.setNavigationItemSelectedListener {
             when (it.itemId) {
-                R.id.drawer_opt_home -> {
-
-                }
+//                R.id.drawer_opt_home -> {
+//                    true
+//                }
                 R.id.drawer_opt_search -> {
                     val searchNavigationIntent = Intent(this, SearchActivity::class.java)
                     startActivity(searchNavigationIntent)
@@ -102,7 +102,7 @@ class ForecastActivity : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
-    fun makeSpecificApiRequest(): ForecastResponseData? {
+    private fun makeSpecificApiRequest(): ForecastResponseData? {
         try {
             var resp: ForecastResponseData? = null
 
@@ -140,7 +140,7 @@ class ForecastActivity : AppCompatActivity() {
         }
     }
 
-    fun makeApiRequest(): ForecastResponseData? {
+    private fun makeApiRequest(): ForecastResponseData? {
         try {
             var resp: ForecastResponseData? = null
 
