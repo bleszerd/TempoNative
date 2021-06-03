@@ -3,12 +3,12 @@ package com.example.temponative.activity
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.widget.Button
-import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.TextView
-import androidx.core.content.ContextCompat
-import androidx.core.view.get
+import android.view.Gravity
+import android.view.MenuItem
+import android.widget.*
+import androidx.appcompat.app.ActionBarDrawerToggle
+import androidx.core.view.GravityCompat
+import androidx.drawerlayout.widget.DrawerLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.temponative.R
@@ -19,10 +19,10 @@ import com.example.temponative.api.responsedata.ForecastResponseData
 import com.example.temponative.datasource.WeekForecastDataSource
 import com.example.temponative.models.WeekForecast
 import com.example.temponative.utils.Utils
+import com.google.android.material.navigation.NavigationView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import org.w3c.dom.Text
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.lang.Exception
@@ -30,6 +30,10 @@ import java.lang.Exception
 class ForecastActivity : AppCompatActivity() {
     private lateinit var weekForecastAdapter: WeekForecastAdapter
     private val utils = Utils()
+    lateinit var toggle: ActionBarDrawerToggle
+    lateinit var drawerLayout: DrawerLayout
+    lateinit var navigationView: NavigationView
+    lateinit var drawerButton: LinearLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,17 +48,50 @@ class ForecastActivity : AppCompatActivity() {
             adapter = weekForecastAdapter
         }
 
+        drawerButton = findViewById(R.id.drawer_button)
+
         val data = WeekForecastDataSource.createDataset()
         weekForecastAdapter.updateList(data.toMutableList())
 
-        findViewById<Button>(R.id.rp_button).setOnClickListener {
-            makeRPApiRequest()
-            Log.d("sdddd", "Do request")
+        drawerButton.setOnClickListener {
+            drawerLayout.openDrawer(Gravity.LEFT)
+        }
+
+        drawerLayout = findViewById(R.id.drawer_layout)
+        navigationView = findViewById(R.id.nav_view)
+
+        toggle = ActionBarDrawerToggle(this, drawerLayout, R.string.open, R.string.close)
+        drawerLayout.addDrawerListener(toggle)
+        toggle.syncState()
+
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+
+        navigationView.setNavigationItemSelectedListener {
+            when (it.itemId) {
+                R.id.drawer_opt_home -> Toast.makeText(
+                    this@ForecastActivity,
+                    "Home",
+                    Toast.LENGTH_SHORT
+                ).show()
+                R.id.drawer_opt_search -> Toast.makeText(
+                    this@ForecastActivity,
+                    "Search",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+            true
         }
 
         //Do api call and update Ui
         makeApiRequest()
 
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (toggle.onOptionsItemSelected(item)) {
+            true
+        }
+        return super.onOptionsItemSelected(item)
     }
 
     fun makeRPApiRequest(): ForecastResponseData? {
