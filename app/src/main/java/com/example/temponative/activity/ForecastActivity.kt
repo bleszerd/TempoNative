@@ -1,5 +1,6 @@
 package com.example.temponative.activity
 
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -7,7 +8,6 @@ import android.view.Gravity
 import android.view.MenuItem
 import android.widget.*
 import androidx.appcompat.app.ActionBarDrawerToggle
-import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -16,6 +16,7 @@ import com.example.temponative.adapter.WeekForecastAdapter
 import com.example.temponative.api.requests.BASE_URL
 import com.example.temponative.api.requests.ForecastRequest
 import com.example.temponative.api.responsedata.ForecastResponseData
+import com.example.temponative.dataholder.DataHolder
 import com.example.temponative.datasource.WeekForecastDataSource
 import com.example.temponative.models.WeekForecast
 import com.example.temponative.utils.Utils
@@ -28,6 +29,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.lang.Exception
 
 class ForecastActivity : AppCompatActivity() {
+    val dataHolder = DataHolder
     private lateinit var weekForecastAdapter: WeekForecastAdapter
     private val utils = Utils()
     lateinit var toggle: ActionBarDrawerToggle
@@ -68,16 +70,14 @@ class ForecastActivity : AppCompatActivity() {
 
         navigationView.setNavigationItemSelectedListener {
             when (it.itemId) {
-                R.id.drawer_opt_home -> Toast.makeText(
-                    this@ForecastActivity,
-                    "Home",
-                    Toast.LENGTH_SHORT
-                ).show()
-                R.id.drawer_opt_search -> Toast.makeText(
-                    this@ForecastActivity,
-                    "Search",
-                    Toast.LENGTH_SHORT
-                ).show()
+                R.id.drawer_opt_home -> {
+
+                }
+                R.id.drawer_opt_search -> {
+                    val searchNavigationIntent = Intent(this, SearchActivity::class.java)
+                    startActivity(searchNavigationIntent)
+                    drawerLayout.closeDrawer(Gravity.LEFT)
+                }
             }
             true
         }
@@ -87,6 +87,14 @@ class ForecastActivity : AppCompatActivity() {
 
     }
 
+    override fun onResume() {
+        super.onResume()
+
+        if (dataHolder.citySearch != null) {
+            makeSpecificApiRequest()
+        }
+    }
+
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (toggle.onOptionsItemSelected(item)) {
             true
@@ -94,7 +102,7 @@ class ForecastActivity : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
-    fun makeRPApiRequest(): ForecastResponseData? {
+    fun makeSpecificApiRequest(): ForecastResponseData? {
         try {
             var resp: ForecastResponseData? = null
 
@@ -105,7 +113,7 @@ class ForecastActivity : AppCompatActivity() {
                 .create(ForecastRequest::class.java)
 
             CoroutineScope(Dispatchers.Main).launch {
-                val response = api.getRPForecast()
+                val response = api.getSpecificForecast(dataHolder.citySearch)
                 resp = response
 
                 weekForecastAdapter.clearAll()
