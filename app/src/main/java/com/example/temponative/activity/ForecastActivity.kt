@@ -4,18 +4,16 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
 import android.net.NetworkInfo
-import android.net.wifi.p2p.WifiP2pManager
-import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Handler
 import android.util.Log
 import android.view.Gravity
 import android.view.MenuItem
+import android.view.View
 import android.widget.*
 import androidx.appcompat.app.ActionBarDrawerToggle
-import androidx.core.content.getSystemService
+import androidx.appcompat.app.AppCompatActivity
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -31,10 +29,12 @@ import com.example.temponative.utils.Utils
 import com.google.android.material.navigation.NavigationView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import java.lang.Exception
+import java.util.*
+
 
 class ForecastActivity : AppCompatActivity() {
     val dataHolder = DataHolder
@@ -42,8 +42,10 @@ class ForecastActivity : AppCompatActivity() {
     private lateinit var weekForecastAdapter: WeekForecastAdapter
     private val utils = Utils()
     lateinit var toggle: ActionBarDrawerToggle
+    private var isLoading = true
     lateinit var drawerLayout: DrawerLayout
     lateinit var navigationView: NavigationView
+    lateinit var forecastAnimContainer: LinearLayout
     lateinit var drawerButton: LinearLayout
     var context = this
     var connectivity: ConnectivityManager? = null
@@ -54,6 +56,32 @@ class ForecastActivity : AppCompatActivity() {
         setContentView(R.layout.activity_forecast)
 
         isConnected = isNetworkAvailable(this)
+        forecastAnimContainer = findViewById(R.id.linear_lottie_container)
+
+        if (!isConnected) {
+            var handler = Handler()
+            val timer = Timer()
+            val timerTask = object : TimerTask() {
+                override fun run() {
+                    handler.post(Runnable {
+                        isConnected = isNetworkAvailable(this@ForecastActivity)
+                        if (isConnected) {
+                            makeSpecificApiRequest()
+                            timer.cancel()
+                            timer.purge()
+                            return@Runnable
+                        }
+
+                        Toast.makeText(
+                            this@ForecastActivity,
+                            "Sem acesso a intenet",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    })
+                }
+            }
+            timer.schedule(timerTask, 5000, 5000)
+        }
 
         val weekForecastRecyclerView: RecyclerView = findViewById(R.id.forecast_week_recyclerview)
         weekForecastRecyclerView.apply {
@@ -84,9 +112,9 @@ class ForecastActivity : AppCompatActivity() {
 
         navigationView.setNavigationItemSelectedListener {
             when (it.itemId) {
-//                R.id.drawer_opt_home -> {
-//                    true
-//                }
+                R.id.drawer_opt_home -> {
+                    drawerLayout.closeDrawer(Gravity.LEFT)
+                }
                 R.id.drawer_opt_search -> {
                     val searchNavigationIntent = Intent(this, SearchActivity::class.java)
                     startActivity(searchNavigationIntent)
@@ -102,6 +130,8 @@ class ForecastActivity : AppCompatActivity() {
     }
 
     override fun onResume() {
+        forecastAnimContainer.visibility = View.VISIBLE
+
         super.onResume()
 
         makeSpecificApiRequest()
@@ -161,7 +191,7 @@ class ForecastActivity : AppCompatActivity() {
         }
     }
 
-    fun updateUiInfo(apiResponse: ForecastResponseData?) {
+    suspend fun updateUiInfo(apiResponse: ForecastResponseData?) {
         val dateTextView: TextView = findViewById(R.id.activity_forecast_date_textview)
         val cityTextView: TextView = findViewById(R.id.activity_forecast_city_textview)
         val forecastConditionImageView: ImageView =
@@ -183,12 +213,18 @@ class ForecastActivity : AppCompatActivity() {
             )
         )
         Log.d("noite?", apiResponse?.results?.currently.equals("noite").toString())
+        val width = forecastAnimContainer.width
 
         if (apiResponse?.results?.currently.equals("noite")) {
-            headerForecastLinearLayout.setBackgroundResource(R.drawable.night_forecast_gradient)
+            headerForecastLinearLayout.setBackgroundResource(R.drawable.night_forecast_gradient_rounded)
         } else {
-            headerForecastLinearLayout.setBackgroundResource(R.drawable.day_forecast_gradient)
+            headerForecastLinearLayout.setBackgroundResource(R.drawable.day_forecast_gradient_rounded)
         }
+
+        forecastAnimContainer.animate().translationX(-width.toFloat()).start()
+        delay(2000)
+        forecastAnimContainer.visibility = View.GONE
+        forecastAnimContainer.translationX = 0f
     }
 
     fun isNetworkAvailable(context: Context): Boolean {
