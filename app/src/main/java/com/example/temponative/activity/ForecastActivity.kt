@@ -1,6 +1,13 @@
 package com.example.temponative.activity
 
+import android.app.Service
+import android.content.Context
 import android.content.Intent
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.net.NetworkInfo
+import android.net.wifi.p2p.WifiP2pManager
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -8,6 +15,7 @@ import android.view.Gravity
 import android.view.MenuItem
 import android.widget.*
 import androidx.appcompat.app.ActionBarDrawerToggle
+import androidx.core.content.getSystemService
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -30,16 +38,22 @@ import java.lang.Exception
 
 class ForecastActivity : AppCompatActivity() {
     val dataHolder = DataHolder
+    var isConnected = false
     private lateinit var weekForecastAdapter: WeekForecastAdapter
     private val utils = Utils()
     lateinit var toggle: ActionBarDrawerToggle
     lateinit var drawerLayout: DrawerLayout
     lateinit var navigationView: NavigationView
     lateinit var drawerButton: LinearLayout
+    var context = this
+    var connectivity: ConnectivityManager? = null
+    var info: NetworkInfo? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_forecast)
+
+        isConnected = isNetworkAvailable(this)
 
         val weekForecastRecyclerView: RecyclerView = findViewById(R.id.forecast_week_recyclerview)
         weekForecastRecyclerView.apply {
@@ -83,16 +97,14 @@ class ForecastActivity : AppCompatActivity() {
         }
 
         //Do api call and update Ui
-        makeApiRequest()
+        makeSpecificApiRequest()
 
     }
 
     override fun onResume() {
         super.onResume()
 
-        if (dataHolder.citySearch != null) {
-            makeSpecificApiRequest()
-        }
+        makeSpecificApiRequest()
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -103,74 +115,48 @@ class ForecastActivity : AppCompatActivity() {
     }
 
     private fun makeSpecificApiRequest(): ForecastResponseData? {
-        try {
-            var resp: ForecastResponseData? = null
+        if (isConnected) {
+            try {
+                var resp: ForecastResponseData? = null
 
-            val api = Retrofit.Builder()
-                .baseUrl(BASE_URL)
-                .addConverterFactory((GsonConverterFactory.create()))
-                .build()
-                .create(ForecastRequest::class.java)
+                val api = Retrofit.Builder()
+                    .baseUrl(BASE_URL)
+                    .addConverterFactory((GsonConverterFactory.create()))
+                    .build()
+                    .create(ForecastRequest::class.java)
 
-            CoroutineScope(Dispatchers.Main).launch {
-                val response = api.getSpecificForecast(dataHolder.citySearch)
-                resp = response
+                CoroutineScope(Dispatchers.Main).launch {
+                    val response = api.getSpecificForecast(dataHolder.citySearch)
+                    resp = response.body()
 
-                weekForecastAdapter.clearAll()
+                    if (response.isSuccessful) {
+                        weekForecastAdapter.clearAll()
 
-                for (week in response.results.forecast) {
-                    weekForecastAdapter.add(
-                        WeekForecast(
-                            week.date,
-                            week.condition,
-                            week.min.toString(),
-                            week.max.toString()
-                        )
-                    )
+                        for (week in response.body()?.results?.forecast!!) {
+                            weekForecastAdapter.add(
+                                WeekForecast(
+                                    week.date,
+                                    week.condition,
+                                    week.min.toString(),
+                                    week.max.toString()
+                                )
+                            )
+                        }
+
+                        weekForecastAdapter.notifyDataSetChanged()
+                        updateUiInfo(response.body())
+                    } else {
+                        Toast.makeText(this@ForecastActivity, "Fail", Toast.LENGTH_SHORT).show()
+                    }
                 }
 
-                weekForecastAdapter.notifyDataSetChanged()
-                updateUiInfo(response)
+                return resp
+            } catch (e: Exception) {
+                Log.e("ERROR@", e.message.toString())
+                return null
             }
-
-            return resp
-        } catch (e: Exception) {
-            Log.e("ERROR@", e.message.toString())
-            return null
-        }
-    }
-
-    private fun makeApiRequest(): ForecastResponseData? {
-        try {
-            var resp: ForecastResponseData? = null
-
-            val api = Retrofit.Builder()
-                .baseUrl(BASE_URL)
-                .addConverterFactory((GsonConverterFactory.create()))
-                .build()
-                .create(ForecastRequest::class.java)
-
-            CoroutineScope(Dispatchers.Main).launch {
-                val response = api.getForecast()
-                resp = response
-                for (week in response.results.forecast) {
-                    weekForecastAdapter.add(
-                        WeekForecast(
-                            week.date,
-                            week.condition,
-                            week.min.toString(),
-                            week.max.toString()
-                        )
-                    )
-                }
-
-                weekForecastAdapter.notifyDataSetChanged()
-                updateUiInfo(response)
-            }
-
-            return resp
-        } catch (e: Exception) {
-            Log.e("ERROR@", e.message.toString())
+        } else {
+            Toast.makeText(this@ForecastActivity, "Fail", Toast.LENGTH_SHORT).show()
             return null
         }
     }
@@ -203,5 +189,26 @@ class ForecastActivity : AppCompatActivity() {
         } else {
             headerForecastLinearLayout.setBackgroundResource(R.drawable.day_forecast_gradient)
         }
+    }
+
+    fun isNetworkAvailable(context: Context): Boolean {
+        connectivity = context.getSystemService(Service.CONNECTIVITY_SERVICE)
+                as ConnectivityManager
+
+        if (connectivity != null) {
+            info = connectivity!!.activeNetworkInfo
+
+            if (info != null) {
+                if (info!!.state == NetworkInfo.State.CONNECTED) {
+                    Toast.makeText(context, "CONNECTED", Toast.LENGTH_LONG).show()
+                    return true
+                }
+            } else {
+                Toast.makeText(context, "NOT CONNECTED", Toast.LENGTH_LONG).show()
+                return false
+            }
+        }
+
+        return false
     }
 }
