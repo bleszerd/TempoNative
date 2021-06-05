@@ -10,9 +10,6 @@ const val API_KEY = "f1e0774f"
 const val BASE_URL = "https://api.hgbrasil.com/"
 
 interface ForecastRequest {
-    @GET("weather?key=$API_KEY&city_name=Altinopolis,SP")
-    suspend fun getForecast(): Response<ForecastResponseData>
-
     @GET("weather?key=$API_KEY")
-    suspend fun getSpecificForecast(@Query("city_name") city: String?): Response<ForecastResponseData>
+    suspend fun getCityForecast(@Query("city_name") city: String?): Response<ForecastResponseData>
 }

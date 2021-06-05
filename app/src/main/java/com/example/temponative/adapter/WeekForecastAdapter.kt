@@ -8,7 +8,6 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.temponative.R
-import com.example.temponative.datasource.WeekForecastDataSource
 import com.example.temponative.models.WeekForecast
 import com.example.temponative.utils.Utils
 
@@ -16,7 +15,7 @@ class WeekForecastAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     var weekForecastItems = mutableListOf<WeekForecast>()
 
     class WeekForecastViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val utils = Utils()
+        private val utils = Utils()
         private val dateTextView: TextView = itemView.findViewById(R.id.week_forecast_item_date)
         private val tempMinTextView: TextView =
             itemView.findViewById(R.id.week_forecast_item_min_temp)
@@ -26,9 +25,13 @@ class WeekForecastAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
             itemView.findViewById(R.id.week_forecast_item_condition)
 
         fun bind(weekForecast: WeekForecast) {
-            dateTextView.setText(weekForecast.date)
-            tempMinTextView.setText(weekForecast.minTemp)
-            tempMaxTextView.setText(weekForecast.maxTemp)
+            dateTextView.text = weekForecast.date
+            tempMinTextView.text = weekForecast.minTemp
+            tempMaxTextView.text = weekForecast.maxTemp
+            handleIcons(weekForecast)
+        }
+
+        private fun handleIcons(weekForecast: WeekForecast) {
             conditionImageView.setImageResource(utils.handleForecastIcon(weekForecast.condition))
             conditionImageView.setColorFilter(
                 utils.handleForecastIconColor(
@@ -57,21 +60,13 @@ class WeekForecastAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         return weekForecastItems.size
     }
 
-    fun updateList(forecasts: MutableList<WeekForecast>) {
-        weekForecastItems = forecasts
-    }
-
     fun add(forecast: WeekForecast) {
         Log.d("adding", "Adding: ${forecast.date} for ${forecast.minTemp}")
         weekForecastItems.add(forecast)
     }
 
-    fun clearAll(){
-        this.weekForecastItems.clear()
-    }
-
-    fun update(forecastsList: MutableList<WeekForecast>) {
-        this.weekForecastItems.clear()
-        forecastsList.addAll(forecastsList)
+    fun cleanUpdate(forecast: List<WeekForecast>) {
+        weekForecastItems.clear()
+        weekForecastItems.addAll(forecast)
     }
 }

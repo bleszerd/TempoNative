@@ -9,7 +9,6 @@ import android.os.Bundle
 import android.os.Handler
 import android.util.Log
 import android.view.Gravity
-import android.view.MenuItem
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.ActionBarDrawerToggle
@@ -20,8 +19,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.temponative.R
 import com.example.temponative.adapter.WeekForecastAdapter
 import com.example.temponative.api.responsedata.ForecastResponseData
+import com.example.temponative.databinding.ActivityForecastBinding
 import com.example.temponative.dataholder.DataHolder
-import com.example.temponative.datasource.WeekForecastDataSource
 import com.example.temponative.models.WeekForecast
 import com.example.temponative.retrofit.RetrofitBuilder
 import com.example.temponative.utils.Utils
@@ -43,66 +42,27 @@ class ForecastActivity : AppCompatActivity() {
     private lateinit var drawerButton: LinearLayout
     private var connectivity: ConnectivityManager? = null
     private var info: NetworkInfo? = null
+    private lateinit var binding: ActivityForecastBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_forecast)
+        binding = ActivityForecastBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        
+        forecastAnimContainer = binding.linearLottieContainer
+        drawerLayout = binding.drawerLayout
+        navigationView = binding.navView
 
         isConnected = isNetworkAvailable(this)
-        forecastAnimContainer = findViewById(R.id.linear_lottie_container)
 
-        if (!isConnected) {
-            val handler = Handler()
-            val timer = Timer()
-            val timerTask = object : TimerTask() {
-                override fun run() {
-                    handler.post(Runnable {
-                        isConnected = isNetworkAvailable(this@ForecastActivity)
-                        if (isConnected) {
-                            makeSpecificApiRequest()
-                            timer.cancel()
-                            timer.purge()
-                            return@Runnable
-                        }
+        handleConnectionState()
+        configureWeekForecastRecyclerView()
+        configureDrawerButton()
+        configureDrawer()
+        handleDrawerItemSelected()
+    }
 
-                        Toast.makeText(
-                            this@ForecastActivity,
-                            "Sem acesso a intenet",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    })
-                }
-            }
-            timer.schedule(timerTask, 5000, 5000)
-        }
-
-        val weekForecastRecyclerView: RecyclerView = findViewById(R.id.forecast_week_recyclerview)
-        weekForecastRecyclerView.apply {
-            val linearLayoutManager = LinearLayoutManager(this@ForecastActivity)
-            linearLayoutManager.orientation = (LinearLayoutManager.HORIZONTAL)
-            layoutManager = linearLayoutManager
-            weekForecastAdapter = WeekForecastAdapter()
-            adapter = weekForecastAdapter
-        }
-
-        drawerButton = findViewById(R.id.drawer_button)
-
-        val data = WeekForecastDataSource.createDataset()
-        weekForecastAdapter.updateList(data.toMutableList())
-
-        drawerButton.setOnClickListener {
-            drawerLayout.openDrawer(Gravity.LEFT)
-        }
-
-        drawerLayout = findViewById(R.id.drawer_layout)
-        navigationView = findViewById(R.id.nav_view)
-
-        toggle = ActionBarDrawerToggle(this, drawerLayout, R.string.open, R.string.close)
-        drawerLayout.addDrawerListener(toggle)
-        toggle.syncState()
-
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-
+    private fun handleDrawerItemSelected() {
         navigationView.setNavigationItemSelectedListener {
             when (it.itemId) {
                 R.id.drawer_opt_home -> {
@@ -118,93 +78,153 @@ class ForecastActivity : AppCompatActivity() {
         }
     }
 
-    override fun onResume() {
-        forecastAnimContainer.visibility = View.VISIBLE
-        super.onResume()
+    private fun configureDrawer() {
+        toggle = ActionBarDrawerToggle(this, drawerLayout, R.string.open, R.string.close)
+        drawerLayout.addDrawerListener(toggle)
+        toggle.syncState()
 
-        makeSpecificApiRequest()
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
     }
 
-    private fun makeSpecificApiRequest(): Response<ForecastResponseData>? {
-        var finalResponse: Response<ForecastResponseData>? = null
+    private fun configureDrawerButton() {
+        drawerButton = binding.drawerButton
+        drawerButton.setOnClickListener {
+            drawerLayout.openDrawer(Gravity.LEFT)
+        }
+    }
 
+    private fun configureWeekForecastRecyclerView() {
+        val weekForecastRecyclerView: RecyclerView = binding.forecastWeekRecyclerview
+        weekForecastRecyclerView.apply {
+            val linearLayoutManager = LinearLayoutManager(this@ForecastActivity)
+            linearLayoutManager.orientation = (LinearLayoutManager.HORIZONTAL)
+            layoutManager = linearLayoutManager
+            weekForecastAdapter = WeekForecastAdapter()
+            adapter = weekForecastAdapter
+        }
+    }
+
+    private fun handleConnectionState() {
+        if (!isConnected) {
+            val handler = Handler()
+            val timer = Timer()
+            val timerTask = object : TimerTask() {
+                override fun run() {
+                    handler.post(Runnable {
+                        isConnected = isNetworkAvailable(this@ForecastActivity)
+                        if (isConnected) {
+                            getCityForecast()
+                            timer.cancel()
+                            timer.purge()
+                            return@Runnable
+                        }
+
+                        Toast.makeText(
+                            this@ForecastActivity,
+                            "Sem acesso a intenet",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    })
+                }
+            }
+            timer.schedule(timerTask, 5000, 5000)
+        }
+    }
+
+    override fun onResume() {
+        forecastAnimContainer.visibility = View.VISIBLE
+        getCityForecast()
+
+        super.onResume()
+    }
+
+    private fun getCityForecast() {
         if (isConnected) {
             try {
                 val api = RetrofitBuilder().buildForecast()
 
                 CoroutineScope(Dispatchers.IO).launch {
-                    val forecastResponse = async { api?.getSpecificForecast(DataHolder.citySearch) }
+                    val forecastResponse = async { api?.getCityForecast(DataHolder.citySearch) }
                     val forecastData = forecastResponse.await()
-                    finalResponse = forecastData
 
                     withContext(Dispatchers.Main) {
                         if (forecastData?.isSuccessful == true) {
-                            forecastData.let {
-                                weekForecastAdapter.clearAll()
-
-                                for (week in forecastData.body()?.results?.forecast!!) {
-                                    weekForecastAdapter.add(
-                                        WeekForecast(
-                                            week.date,
-                                            week.condition,
-                                            week.min.toString(),
-                                            week.max.toString()
-                                        )
-                                    )
-                                }
-
-                                weekForecastAdapter.notifyDataSetChanged()
-                                updateUiInfo(forecastData.body())
-                            }
+                            updateUIElements(forecastData)
                         } else {
-                            Toast.makeText(this@ForecastActivity, "Fail", Toast.LENGTH_SHORT).show()
+                            Log.e("API_ERROR", "Error!")
                         }
                     }
                 }
             } catch (e: Exception) {
-                Log.e("ERROR@", e.message.toString())
+                Log.e("API_ERROR", e.message.toString())
             }
-        } else {
-            Toast.makeText(this@ForecastActivity, "Fail", Toast.LENGTH_SHORT).show()
         }
-
-        return finalResponse
     }
 
-    private suspend fun updateUiInfo(apiResponse: ForecastResponseData?) {
-        val dateTextView: TextView = findViewById(R.id.activity_forecast_date_textview)
-        val cityTextView: TextView = findViewById(R.id.activity_forecast_city_textview)
-        val forecastConditionImageView: ImageView =
-            findViewById(R.id.activity_forecast_condition_imageview)
-        val forecastTemp: TextView = findViewById(R.id.activity_forecast_temp_textview)
-        val headerForecastLinearLayout: LinearLayout = findViewById(R.id.header_forecast)
+    private suspend fun updateUIElements(
+        forecastData: Response<ForecastResponseData>
+    ) {
+        val newForecastList = mutableListOf<WeekForecast>()
+
+        for (week in forecastData.body()?.results?.forecast!!) {
+            newForecastList.add(
+                WeekForecast(week.date, week.condition, week.min.toString(), week.max.toString())
+            )
+        }
+
+        weekForecastAdapter.cleanUpdate(newForecastList)
+        handleUpdateElements(forecastData.body())
+    }
+
+    private suspend fun handleUpdateElements(apiResponse: ForecastResponseData?) {
+        val dateTextView = binding.activityForecastDateTextview
+        val cityTextView = binding.activityForecastCityTextview
+        val forecastConditionImageView = binding.activityForecastConditionImageview
+        val forecastTemp = binding.activityForecastTempTextview
+        val headerForecastLinearLayout = binding.headerForecast
 
         dateTextView.text = apiResponse?.results?.date
-
         cityTextView.text = apiResponse?.results?.city_name
         forecastTemp.text = apiResponse?.results?.temp.toString()
+
+        updateUiIcons(forecastConditionImageView, apiResponse)
+        handleForecastBackgroundGradient(apiResponse, headerForecastLinearLayout)
+        handleCurtainAnim()
+    }
+
+    private fun handleForecastBackgroundGradient(
+        apiResponse: ForecastResponseData?,
+        headerForecastLinearLayout: LinearLayout
+    ) {
+        if (apiResponse?.results?.currently.equals("noite")) {
+            headerForecastLinearLayout.setBackgroundResource(R.drawable.night_forecast_gradient_rounded)
+        } else {
+            headerForecastLinearLayout.setBackgroundResource(R.drawable.day_forecast_gradient_rounded)
+        }
+    }
+
+    private suspend fun handleCurtainAnim() {
+        val width = forecastAnimContainer.width
+        forecastAnimContainer.animate().translationX(-width.toFloat()).start()
+        delay(2000)
+        forecastAnimContainer.visibility = View.GONE
+        forecastAnimContainer.translationX = 0f
+    }
+
+    private fun updateUiIcons(
+        forecastConditionImageView: ImageView,
+        apiResponse: ForecastResponseData?
+    ) {
         forecastConditionImageView.setImageResource(
             utils.handleForecastIcon(apiResponse?.results?.condition_slug)
         )
+
         forecastConditionImageView.setColorFilter(
             utils.handleForecastIconColor(
                 this,
                 apiResponse?.results?.condition_slug
             )
         )
-        Log.d("noite?", apiResponse?.results?.currently.equals("noite").toString())
-        val width = forecastAnimContainer.width
-
-        if (apiResponse?.results?.currently.equals("noite")) {
-            headerForecastLinearLayout.setBackgroundResource(R.drawable.night_forecast_gradient_rounded)
-        } else {
-            headerForecastLinearLayout.setBackgroundResource(R.drawable.day_forecast_gradient_rounded)
-        }
-
-        forecastAnimContainer.animate().translationX(-width.toFloat()).start()
-        delay(2000)
-        forecastAnimContainer.visibility = View.GONE
-        forecastAnimContainer.translationX = 0f
     }
 
     fun isNetworkAvailable(context: Context): Boolean {
@@ -214,15 +234,7 @@ class ForecastActivity : AppCompatActivity() {
         if (connectivity != null) {
             info = connectivity!!.activeNetworkInfo
 
-            if (info != null) {
-                if (info!!.state == NetworkInfo.State.CONNECTED) {
-                    Toast.makeText(context, "CONNECTED", Toast.LENGTH_LONG).show()
-                    return true
-                }
-            } else {
-                Toast.makeText(context, "NOT CONNECTED", Toast.LENGTH_LONG).show()
-                return false
-            }
+            return info != null && info!!.state == NetworkInfo.State.CONNECTED
         }
 
         return false
