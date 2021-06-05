@@ -19,37 +19,30 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.temponative.R
 import com.example.temponative.adapter.WeekForecastAdapter
-import com.example.temponative.api.requests.BASE_URL
-import com.example.temponative.api.requests.ForecastRequest
 import com.example.temponative.api.responsedata.ForecastResponseData
 import com.example.temponative.dataholder.DataHolder
 import com.example.temponative.datasource.WeekForecastDataSource
 import com.example.temponative.models.WeekForecast
+import com.example.temponative.retrofit.RetrofitBuilder
 import com.example.temponative.utils.Utils
 import com.google.android.material.navigation.NavigationView
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
+import kotlinx.coroutines.*
+import retrofit2.Response
+import java.lang.Runnable
 import java.util.*
 
 
 class ForecastActivity : AppCompatActivity() {
-    val dataHolder = DataHolder
     var isConnected = false
     private lateinit var weekForecastAdapter: WeekForecastAdapter
     private val utils = Utils()
-    lateinit var toggle: ActionBarDrawerToggle
-    private var isLoading = true
-    lateinit var drawerLayout: DrawerLayout
-    lateinit var navigationView: NavigationView
-    lateinit var forecastAnimContainer: LinearLayout
-    lateinit var drawerButton: LinearLayout
-    var context = this
-    var connectivity: ConnectivityManager? = null
-    var info: NetworkInfo? = null
+    private lateinit var toggle: ActionBarDrawerToggle
+    private lateinit var drawerLayout: DrawerLayout
+    private lateinit var navigationView: NavigationView
+    private lateinit var forecastAnimContainer: LinearLayout
+    private lateinit var drawerButton: LinearLayout
+    private var connectivity: ConnectivityManager? = null
+    private var info: NetworkInfo? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,7 +52,7 @@ class ForecastActivity : AppCompatActivity() {
         forecastAnimContainer = findViewById(R.id.linear_lottie_container)
 
         if (!isConnected) {
-            var handler = Handler()
+            val handler = Handler()
             val timer = Timer()
             val timerTask = object : TimerTask() {
                 override fun run() {
@@ -123,75 +116,62 @@ class ForecastActivity : AppCompatActivity() {
             }
             true
         }
-
-        //Do api call and update Ui
-        makeSpecificApiRequest()
-
     }
 
     override fun onResume() {
         forecastAnimContainer.visibility = View.VISIBLE
-
         super.onResume()
 
         makeSpecificApiRequest()
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (toggle.onOptionsItemSelected(item)) {
-            true
-        }
-        return super.onOptionsItemSelected(item)
-    }
+    private fun makeSpecificApiRequest(): Response<ForecastResponseData>? {
+        var finalResponse: Response<ForecastResponseData>? = null
 
-    private fun makeSpecificApiRequest(): ForecastResponseData? {
         if (isConnected) {
             try {
-                var resp: ForecastResponseData? = null
+                val api = RetrofitBuilder().buildForecast()
 
-                val api = Retrofit.Builder()
-                    .baseUrl(BASE_URL)
-                    .addConverterFactory((GsonConverterFactory.create()))
-                    .build()
-                    .create(ForecastRequest::class.java)
+                CoroutineScope(Dispatchers.IO).launch {
+                    val forecastResponse = async { api?.getSpecificForecast(DataHolder.citySearch) }
+                    val forecastData = forecastResponse.await()
+                    finalResponse = forecastData
 
-                CoroutineScope(Dispatchers.Main).launch {
-                    val response = api.getSpecificForecast(dataHolder.citySearch)
-                    resp = response.body()
+                    withContext(Dispatchers.Main) {
+                        if (forecastData?.isSuccessful == true) {
+                            forecastData.let {
+                                weekForecastAdapter.clearAll()
 
-                    if (response.isSuccessful) {
-                        weekForecastAdapter.clearAll()
+                                for (week in forecastData.body()?.results?.forecast!!) {
+                                    weekForecastAdapter.add(
+                                        WeekForecast(
+                                            week.date,
+                                            week.condition,
+                                            week.min.toString(),
+                                            week.max.toString()
+                                        )
+                                    )
+                                }
 
-                        for (week in response.body()?.results?.forecast!!) {
-                            weekForecastAdapter.add(
-                                WeekForecast(
-                                    week.date,
-                                    week.condition,
-                                    week.min.toString(),
-                                    week.max.toString()
-                                )
-                            )
+                                weekForecastAdapter.notifyDataSetChanged()
+                                updateUiInfo(forecastData.body())
+                            }
+                        } else {
+                            Toast.makeText(this@ForecastActivity, "Fail", Toast.LENGTH_SHORT).show()
                         }
-
-                        weekForecastAdapter.notifyDataSetChanged()
-                        updateUiInfo(response.body())
-                    } else {
-                        Toast.makeText(this@ForecastActivity, "Fail", Toast.LENGTH_SHORT).show()
                     }
                 }
-
-                return resp
             } catch (e: Exception) {
                 Log.e("ERROR@", e.message.toString())
-                return null
             }
         } else {
             Toast.makeText(this@ForecastActivity, "Fail", Toast.LENGTH_SHORT).show()
-            return null
         }
+
+        return finalResponse
     }
 
-    suspend fun updateUiInfo(apiResponse: ForecastResponseData?) {
+    private suspend fun updateUiInfo(apiResponse: ForecastResponseData?) {
         val dateTextView: TextView = findViewById(R.id.activity_forecast_date_textview)
         val cityTextView: TextView = findViewById(R.id.activity_forecast_city_textview)
         val forecastConditionImageView: ImageView =
@@ -199,10 +179,10 @@ class ForecastActivity : AppCompatActivity() {
         val forecastTemp: TextView = findViewById(R.id.activity_forecast_temp_textview)
         val headerForecastLinearLayout: LinearLayout = findViewById(R.id.header_forecast)
 
-        dateTextView.setText(apiResponse?.results?.date)
+        dateTextView.text = apiResponse?.results?.date
 
-        cityTextView.setText(apiResponse?.results?.city_name)
-        forecastTemp.setText(apiResponse?.results?.temp.toString())
+        cityTextView.text = apiResponse?.results?.city_name
+        forecastTemp.text = apiResponse?.results?.temp.toString()
         forecastConditionImageView.setImageResource(
             utils.handleForecastIcon(apiResponse?.results?.condition_slug)
         )
