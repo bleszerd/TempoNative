@@ -12,10 +12,10 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.TempoNative">
-        <activity android:name=".activity.SearchActivity">
+        <activity android:name="com.example.temponative.ui.activity.SearchActivity">
 
         </activity>
-        <activity android:name=".activity.ForecastActivity">
+        <activity android:name="com.example.temponative.ui.activity.ForecastActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
