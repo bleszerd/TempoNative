@@ -1,7 +1,7 @@
-package com.example.temponative.retrofit
+package com.example.temponative.network.retrofit
 
-import com.example.temponative.api.requests.BASE_URL
-import com.example.temponative.api.requests.ForecastRequest
+import com.example.temponative.network.api.BASE_URL
+import com.example.temponative.network.api.ForecastRequest
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 

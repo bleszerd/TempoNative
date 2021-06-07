@@ -1,4 +1,4 @@
-package com.example.temponative.api.responsedata
+package com.example.temponative.models.api
 
 data class Results(
     val cid: String,

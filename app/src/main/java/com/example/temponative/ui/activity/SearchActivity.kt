@@ -1,15 +1,15 @@
 package com.example.temponative.ui.activity
 
-import androidx.appcompat.app.AppCompatActivity
+import android.content.Intent
 import android.os.Bundle
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
+import androidx.appcompat.app.AppCompatActivity
 import com.example.temponative.R
-import com.example.temponative.dataholder.DataHolder
+
 
 class SearchActivity : AppCompatActivity() {
-    val dataHolder = DataHolder
     lateinit var backButton: ImageView
     lateinit var searchInput: EditText
     lateinit var searchButton: LinearLayout
@@ -27,7 +27,9 @@ class SearchActivity : AppCompatActivity() {
         }
 
         searchButton.setOnClickListener {
-            dataHolder.citySearch = searchInput.text.toString()
+            val resultIntent = Intent()
+            resultIntent.putExtra("searchExtra", searchInput.text)
+            setResult(RESULT_OK, resultIntent)
             finish()
         }
     }

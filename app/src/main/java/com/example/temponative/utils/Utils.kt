@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.core.content.ContextCompat
 import com.example.temponative.R
 
-open class Utils {
+object Utils {
     fun handleForecastIcon(condition: String?): Int =
         when (condition) {
             "storm" -> R.drawable.ic_cloud_rain

@@ -1,4 +1,4 @@
-package com.example.temponative.adapter
+package com.example.temponative.ui.adapter
 
 import android.util.Log
 import android.view.LayoutInflater
@@ -8,14 +8,13 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.temponative.R
-import com.example.temponative.models.WeekForecast
+import com.example.temponative.models.app.WeekForecast
 import com.example.temponative.utils.Utils
 
 class WeekForecastAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     var weekForecastItems = mutableListOf<WeekForecast>()
 
     class WeekForecastViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val utils = Utils()
         private val dateTextView: TextView = itemView.findViewById(R.id.week_forecast_item_date)
         private val tempMinTextView: TextView =
             itemView.findViewById(R.id.week_forecast_item_min_temp)
@@ -32,9 +31,9 @@ class WeekForecastAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         }
 
         private fun handleIcons(weekForecast: WeekForecast) {
-            conditionImageView.setImageResource(utils.handleForecastIcon(weekForecast.condition))
+            conditionImageView.setImageResource(Utils.handleForecastIcon(weekForecast.condition))
             conditionImageView.setColorFilter(
-                utils.handleForecastIconColor(
+                Utils.handleForecastIconColor(
                     itemView.context,
                     weekForecast.condition
                 )

@@ -1,4 +1,4 @@
-package com.example.temponative.models
+package com.example.temponative.models.app
 
 data class WeekForecast(
     var date: String,
