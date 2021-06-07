@@ -1,13 +1,15 @@
 package com.example.temponative.api.requests
 
+import com.example.temponative.R
 import com.example.temponative.api.responsedata.ForecastResponseData
+import com.example.temponative.dataholder.DataHolder
+import com.example.temponative.dataholder.DataHolder.Companion.API_KEY
 import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
 
-const val API_KEY = "f1e0774f"
 const val BASE_URL = "https://api.hgbrasil.com/"
 
 interface ForecastRequest {
