@@ -7,16 +7,16 @@
     android:layout_height="match_parent"
     android:layout_below="@id/header_constraint_forecast"
     android:fitsSystemWindows="true"
-    tools:context=".activity.ForecastActivity">
+    tools:context=".ui.activity.ForecastActivity">
 
     <LinearLayout
         android:id="@+id/linear_lottie_container"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:background="@drawable/day_forecast_gradient_flat"
         android:elevation="16dp"
-        android:orientation="vertical"
-        android:gravity="center">
+        android:gravity="center"
+        android:orientation="vertical">
 
         <com.airbnb.lottie.LottieAnimationView
             android:id="@+id/animation_View"

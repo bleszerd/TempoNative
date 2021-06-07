@@ -1,11 +1,10 @@
-package com.example.temponative.activity
+package com.example.temponative.ui.activity
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.Toolbar
 import com.example.temponative.R
 import com.example.temponative.dataholder.DataHolder
 
