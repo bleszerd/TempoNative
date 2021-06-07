@@ -1,8 +1,10 @@
 package com.example.temponative.ui.activity
 
+import android.annotation.SuppressLint
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.ConnectivityManager
 import android.net.NetworkInfo
 import android.os.Bundle
@@ -13,6 +15,7 @@ import android.view.View
 import android.widget.*
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -23,16 +26,17 @@ import com.example.temponative.api.responsedata.ForecastResponseData
 import com.example.temponative.databinding.ActivityForecastBinding
 import com.example.temponative.dataholder.DataHolder
 import com.example.temponative.models.WeekForecast
-import com.example.temponative.retrofit.RetrofitBuilder
 import com.example.temponative.ui.viewmodel.ForecastViewModel
 import com.example.temponative.utils.Utils
 import com.google.android.material.navigation.NavigationView
 import kotlinx.coroutines.*
-import retrofit2.Response
 import java.lang.Runnable
 import java.util.*
 import androidx.lifecycle.Observer
-import com.example.temponative.api.responsedata.Forecast
+import com.example.temponative.ui.viewmodel.ForecastViewModel.getApiMethod.BY_NAME
+import com.example.temponative.ui.viewmodel.ForecastViewModel.getApiMethod.CURRENT
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.Dispatchers.Main
 
 
@@ -49,11 +53,14 @@ class ForecastActivity : AppCompatActivity() {
     private var info: NetworkInfo? = null
     private lateinit var viewModel: ForecastViewModel
     private lateinit var binding: ActivityForecastBinding
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityForecastBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
         viewModel = ViewModelProvider(this).get(ForecastViewModel::class.java)
         viewModel.forecastResults.observe(this, Observer {
@@ -124,7 +131,7 @@ class ForecastActivity : AppCompatActivity() {
                     handler.post(Runnable {
                         isConnected = isNetworkAvailable(this@ForecastActivity)
                         if (isConnected) {
-                            viewModel.getCityForecast()
+                            getLocaleAndCallForecast()
                             timer.cancel()
                             timer.purge()
                             return@Runnable
@@ -143,9 +150,18 @@ class ForecastActivity : AppCompatActivity() {
     }
 
     override fun onResume() {
+        handleGPSPermissions()
         forecastAnimContainer.visibility = View.VISIBLE
-        viewModel.getCityForecast()
+        if (DataHolder.citySearch.isNotEmpty()) {
+            viewModel.getCityForecast(BY_NAME)
+        } else {
+            getLocaleAndCallForecast()
+        }
 
+        Log.d(
+            "data latlon",
+            DataHolder.latitude + " / " + DataHolder.longitude
+        )
         super.onResume()
     }
 
@@ -228,5 +244,48 @@ class ForecastActivity : AppCompatActivity() {
         }
 
         return false
+    }
+
+    private fun handleGPSPermissions() {
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                android.Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                this,
+                android.Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(
+                    android.Manifest.permission.ACCESS_FINE_LOCATION,
+                    android.Manifest.permission.ACCESS_COARSE_LOCATION
+                ),
+                1
+            )
+            return
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun getLocaleAndCallForecast() {
+        fusedLocationClient.lastLocation
+            .addOnSuccessListener { location ->
+                DataHolder.latitude = location.latitude.toString()
+                DataHolder.longitude = location.longitude.toString()
+
+                viewModel.getCityForecast(CURRENT)
+
+                Log.d(
+                    "latlon",
+                    location.latitude.toString() + " / " + location.longitude.toString()
+                )
+
+                Log.d(
+                    "data latlon",
+                    DataHolder.latitude + " / " + DataHolder.longitude
+                )
+
+            }
     }
 }
