@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">TempoNative</string>
+    <string name="app_name">Tempo</string>
     <string name="close">close</string>
     <string name="open">open</string>
     <string name="API_KEY">3192f688</string>

@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     android:layout_below="@id/header_constraint_forecast"
     android:fitsSystemWindows="true"
-    tools:context=".ui.activity.ForecastActivity">
+    tools:context="bleszerd.com.github.tempo.ui.activity.ForecastActivity">
 
     <LinearLayout
         android:id="@+id/linear_lottie_container"
