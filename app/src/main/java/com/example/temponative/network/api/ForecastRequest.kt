@@ -6,7 +6,7 @@ import retrofit2.http.GET
 import retrofit2.http.Query
 
 const val BASE_URL = "https://api.hgbrasil.com/"
-const val API_KEY = "2ad90ff2"
+const val API_KEY = "YOUR_API_HERE"
 
 interface ForecastRequest {
     @GET("weather?key=$API_KEY")
