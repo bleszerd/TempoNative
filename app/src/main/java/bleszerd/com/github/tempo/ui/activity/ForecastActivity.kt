@@ -6,6 +6,7 @@ import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.view.animation.AnimationUtils
@@ -33,6 +34,7 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.material.navigation.NavigationView
 import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.Main
+import okhttp3.internal.wait
 import java.util.*
 
 
@@ -70,8 +72,7 @@ class ForecastActivity : AppCompatActivity() {
 
         if(!hasNetworkConnection)
             Toast.makeText(this, "Sem acesso à internet", Toast.LENGTH_SHORT).show()
-            
-        handleGPSPermissions()
+
         getCurrentLocation()
         populateViewReferences()
         configureObservers()
@@ -231,11 +232,12 @@ class ForecastActivity : AppCompatActivity() {
                 ),
                 1
             )
+
             return
         }
     }
 
-    @SuppressLint("MissingPermission") //Permission requested before this call
+    @SuppressLint("MissingPermission") //Permission before this call
     private fun getCurrentLocation() {
         fusedLocationClient.lastLocation
             .addOnSuccessListener { location ->
@@ -243,6 +245,11 @@ class ForecastActivity : AppCompatActivity() {
                     val (latitude, longitude) = location
                     viewModel.latAndLon.value = Pair(latitude, longitude)
                 }
+            }
+
+            .addOnFailureListener {
+                handleGPSPermissions()
+                getCurrentLocation()
             }
     }
 
