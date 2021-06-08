@@ -2,7 +2,7 @@
 Android kotlin flavor of my original (React Native) Tempo app 🤖🌧.
 
 ## Download
-You can download the final package from links below
+You can download the final package from links below or from `Releases` on the right side of this page
 <br>
 <br>
 
