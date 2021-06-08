@@ -60,7 +60,6 @@ class WeekForecastAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     }
 
     fun add(forecast: WeekForecast) {
-        Log.d("adding", "Adding: ${forecast.date} for ${forecast.minTemp}")
         weekForecastItems.add(forecast)
     }
 

@@ -47,7 +47,6 @@ class ForecastViewModel : ViewModel() {
                 )
 
                 val forecastData = forecastResponse?.body()
-                Log.d("sdsds", forecastResponse.toString())
 
                 withContext(Dispatchers.Main) {
                     if (forecastResponse?.isSuccessful == true) {

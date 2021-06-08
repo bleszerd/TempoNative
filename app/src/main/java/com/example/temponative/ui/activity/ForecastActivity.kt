@@ -16,7 +16,6 @@ import androidx.core.app.ActivityCompat
 import androidx.core.location.component1
 import androidx.core.location.component2
 import androidx.drawerlayout.widget.DrawerLayout
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -33,7 +32,6 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.material.navigation.NavigationView
 import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.Main
-import java.io.IOException
 import java.util.*
 
 
@@ -47,10 +45,10 @@ class ForecastActivity : AppCompatActivity() {
     private lateinit var viewModel: ForecastViewModel
     private lateinit var binding: ActivityForecastBinding
     private lateinit var fusedLocationClient: FusedLocationProviderClient
-    private var connected = verifyConnection()
+    private var hasNetworkConnection = verifyConnection()
 
     //Create a result contract with search activity
-    private val resultContract =
+    private val citySearchForecastResult =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
                 val extraValue = result.data?.extras?.get("searchExtra").toString()
@@ -69,6 +67,9 @@ class ForecastActivity : AppCompatActivity() {
         //Set location provider service
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
+        if(!hasNetworkConnection)
+            Toast.makeText(this, "Sem acesso à internet", Toast.LENGTH_SHORT).show()
+            
         handleGPSPermissions()
         getCurrentLocation()
         populateViewReferences()
@@ -76,6 +77,11 @@ class ForecastActivity : AppCompatActivity() {
         configureWeekForecastRecyclerView()
         configureDrawerButton()
         configureDrawer()
+    }
+
+    private fun verifyConnection(): Boolean {
+        val command = "ping -c 1 google.com"
+        return (Runtime.getRuntime().exec(command).waitFor() == 0)
     }
 
     private fun populateViewReferences() {
@@ -93,36 +99,15 @@ class ForecastActivity : AppCompatActivity() {
             this.updateUIElements(it)
         })
         viewModel.citySearch.observe(this, Observer { cityName ->
-            if (connected) {
+            if (hasNetworkConnection) {
                 viewModel.getCityForecast(cityName)
-            } else {
-                Toast.makeText(this@ForecastActivity, "Sem acesso à internet", Toast.LENGTH_SHORT).show()
             }
         })
         viewModel.latAndLon.observe(this, Observer { latLon ->
-            if (connected) {
+            if (hasNetworkConnection) {
                 viewModel.getCityForecast(latLon)
-            } else {
-                Toast.makeText(this@ForecastActivity, "Sem acesso à internet", Toast.LENGTH_SHORT).show()
             }
         })
-    }
-
-
-    private fun handleDrawerItemSelected() {
-        navigationView.setNavigationItemSelectedListener {
-            when (it.itemId) {
-                R.id.drawer_opt_home -> {
-                    drawerLayout.closeDrawer(Gravity.LEFT)
-                }
-                R.id.drawer_opt_search -> {
-                    val searchNavigationIntent = Intent(this, SearchActivity::class.java)
-                    resultContract.launch(searchNavigationIntent)
-                    drawerLayout.closeDrawer(Gravity.LEFT)
-                }
-            }
-            true
-        }
     }
 
     private fun configureDrawer() {
@@ -133,6 +118,22 @@ class ForecastActivity : AppCompatActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         handleDrawerItemSelected()
+    }
+
+    private fun handleDrawerItemSelected() {
+        navigationView.setNavigationItemSelectedListener {
+            when (it.itemId) {
+                R.id.drawer_opt_home -> {
+                    drawerLayout.closeDrawer(Gravity.LEFT)
+                }
+                R.id.drawer_opt_search -> {
+                    val searchNavigationIntent = Intent(this, SearchActivity::class.java)
+                    citySearchForecastResult.launch(searchNavigationIntent)
+                    drawerLayout.closeDrawer(Gravity.LEFT)
+                }
+            }
+            true
+        }
     }
 
     private fun configureDrawerButton() {
@@ -233,13 +234,7 @@ class ForecastActivity : AppCompatActivity() {
         }
     }
 
-    override fun onStart() {
-        handleGPSPermissions()
-
-        super.onStart()
-    }
-
-    @SuppressLint("MissingPermission")
+    @SuppressLint("MissingPermission") //Permission requested before this call
     private fun getCurrentLocation() {
         fusedLocationClient.lastLocation
             .addOnSuccessListener { location ->
@@ -250,6 +245,7 @@ class ForecastActivity : AppCompatActivity() {
             }
     }
 
+    // ============ ANIMATIONS CONTROLLER ============ //
     private fun handleAnimationComplete() {
         val curtainAnimation = AnimationUtils.loadAnimation(this, R.anim.courtin_close_animation)
 
@@ -275,11 +271,4 @@ class ForecastActivity : AppCompatActivity() {
     private fun handleAnimationStart() {
         forecastAnimContainer.visibility = View.VISIBLE
     }
-
-    @Throws(InterruptedException::class, IOException::class)
-    fun verifyConnection(): Boolean {
-        val command = "ping -c 1 google.com"
-        return Runtime.getRuntime().exec(command).waitFor() == 0
-    }
-
 }
