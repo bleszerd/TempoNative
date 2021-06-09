@@ -9,7 +9,7 @@ import kotlinx.coroutines.*
 import retrofit2.Response
 
 class ForecastViewModel : ViewModel() {
-    var forecastResults = MutableLiveData<ForecastResponseData>()
+    var forecastResults = MutableLiveData<ForecastResponseData?>()
     var citySearch = MutableLiveData<String>()
     var latAndLon = MutableLiveData<Pair<Double, Double>>()
 
@@ -25,8 +25,6 @@ class ForecastViewModel : ViewModel() {
                 withContext(Dispatchers.Main) {
                     if (forecastResponse?.isSuccessful == true) {
                         forecastResults.value = forecastData
-                    } else {
-                        Log.e("API_ERROR", "Error!")
                     }
                 }
             }
@@ -53,6 +51,7 @@ class ForecastViewModel : ViewModel() {
                         forecastResults.value = forecastData
                     } else {
                         Log.e("API_ERROR", "Error!")
+                        forecastResults.value = null
                     }
                 }
             }

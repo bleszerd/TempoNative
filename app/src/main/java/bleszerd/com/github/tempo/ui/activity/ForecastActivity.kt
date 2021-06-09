@@ -70,7 +70,7 @@ class ForecastActivity : AppCompatActivity() {
         //Set location provider service
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
-        if(!hasNetworkConnection)
+        if (!hasNetworkConnection)
             Toast.makeText(this, "Sem acesso à internet", Toast.LENGTH_SHORT).show()
 
         getCurrentLocation()
@@ -98,7 +98,12 @@ class ForecastActivity : AppCompatActivity() {
 
         //Set observers
         viewModel.forecastResults.observe(this, Observer {
-            this.updateUIElements(it)
+            if(it == null || it.valid_key == false){
+                Toast.makeText(this, "\t\t\tAPI limit exceeded :(\n This is not an error in the app.", Toast.LENGTH_LONG).show()
+            } else {
+                this.updateUIElements(it)
+            }
+
         })
         viewModel.citySearch.observe(this, Observer { cityName ->
             if (hasNetworkConnection) {

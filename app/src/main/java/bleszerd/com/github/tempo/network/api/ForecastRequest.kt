@@ -5,6 +5,7 @@ import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Query
 
+//api.openweathermap.org/data/2.5/weather?q={city name}&appid={API key}
 const val BASE_URL = "https://api.hgbrasil.com/"
 const val API_KEY = "YOUR_API_HERE"
 
