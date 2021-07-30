@@ -1,5 +1,7 @@
 # TempoNative
-Android kotlin flavor of my original (React Native) Tempo app 🤖🌧.
+Android kotlin flavor of my original (React Native) Tempo app 🤖🌧.  
+
+Original project and prints [here](https://github.com/bleszerd/tempo).
 
 ## Download
 You can download the final package from links in `Releases` section on the right side of this page
